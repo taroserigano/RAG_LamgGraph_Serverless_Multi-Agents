@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+
+
+model Tour {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  city String
+  country String
+  title String
+  description String @db.Text
+  image String? @db.Text
+  stops Json
+  @@unique([city,country])
+}
+
+model Token {
+  clerkId String @id
+  tokens Int @default (1000)
+}
+
+enum KnowledgeStatus {
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+model KnowledgeDocument {
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  userId        String
+  title         String
+  filename      String
+  filePath      String?          // Path to the stored file on the backend
+  mimeType      String
+  size          Int
+  chunkCount    Int             @default(0)
+  tokenEstimate Int             @default(0)
+  status        KnowledgeStatus @default(PROCESSING)
+  error         String?
+  notes         String?
+  sourceUrl     String?
+  
+  chatSessions  ChatSession[]
+
+  @@index([userId])
+}
+
+model ChatSession {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  title       String   @default("New Chat")
+  messages    Json     // Array of {role, content, citations}
+  
+  documents   KnowledgeDocument[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model TripPlan {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  destination   String
+  country       String
+  days          Int
+  budget        String?
+  checkIn       String?
+  checkOut      String?
+  preferences   Json?    // Array of preference strings
+  itinerary     Json     // Full itinerary object with daily_plans
+  hotels        Json?    // Array of hotel recommendations
+  heroImage     String?  // URL to hero image
+  title         String   // Generated trip title
+  
+  @@index([userId])
+  @@index([createdAt])
+}
